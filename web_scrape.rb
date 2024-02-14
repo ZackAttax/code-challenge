@@ -9,20 +9,33 @@ class WebScrape
     @html = html
   end
 
-  def extract_from_carrousel(carrousel_css)
+  def extract_from_carousel(carousel_css)
     doc = Nokogiri::HTML(@html)
-    carrousel = doc.css(carrousel_css) # Selecting all <a> tags with class 'klitem'
-    carrousel.map do |item|
+    carousel = doc.css(carousel_css)[2]
+    binding.irb
+    carousel.css('a').map do |item|
+      # binding.irb
       item_data = {}
       item_data[:name] = item['aria-label']
-      item_data[:date] = item.at_css('div.ellip.klmeta')&.text # Using &.text to avoid nil error
-      item_data[:google_link] = GOOGLE_URL + item['href']
-      item_data[:thumbnail] = item.at_css('img')['src']
+      item_data[:date] =  item.css("div:first-child+div").map(&:text).last
+      item_data[:google_link] = "#{GOOGLE_URL}#{item['href']}" if item['href']
+      # item_data[:thumbnail] = item.at_css('img')['src'] if item.at_css('img')
 
       item_data
     end
   end
+
+  def find_child(item)
+    return item if item.children.empty?
+    find_child(item.children.last)
+  end
 end
+p 'files/van-gogh-paintings.html'
 html = File.read('files/van-gogh-paintings.html')
-carrousel_css = 'a.klitem'
-pp WebScrape.new(html).extract_from_carrousel(carrousel_css)
+# p 'files/timothee chalamet - Google Search.html'
+# html = File.read('files/timothee chalamet - Google Search.html')
+# p 'files/van gogh - Google Search.html'
+# html = File.read('files/van gogh - Google Search.html')
+
+carousel_css = 'g-scrolling-carousel'
+pp WebScrape.new(html).extract_from_carousel(carousel_css)
